@@ -1,0 +1,22 @@
+sudo: required
+services:
+   - docker
+
+before_install:
+  - docker build -t sandeep/react-test -f ./client/Dockerfile.dev ./client
+
+script: 
+  - docker run sandeep/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t sandeep/multi-client ./client
+  - docker build -t sandeep/multi-nginx ./nginx
+  - docker build -t sandeep/multi-server ./server
+  - docker build -t sandeep/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push sandeep/multi-client
+  - docker push sandeep/multi-nginx
+  - docker push sandeep/multi-server
+  - docker push sandeep/multi-worker
